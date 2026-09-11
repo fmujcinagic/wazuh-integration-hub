@@ -1,0 +1,42 @@
+<!--
+  Podman monitoring decoders.
+
+  Every collector payload is a JSON document carrying an "event_type" key.
+  These decoders pin each event type to a named decoder so rules can target
+  it with <decoded_as> instead of matching raw JSON. The file is installed as
+  ruleset/decoders/0005a-podman_decoders.xml so it is evaluated before the
+  generic JSON decoder in 0006-json_decoders.xml.
+-->
+
+<decoder name="podman-event">
+  <prematch>"event_type":\s*"podman.event"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="podman-stats">
+  <prematch>"event_type":\s*"podman.stats"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="podman-benchmark">
+  <prematch>"event_type":\s*"podman.benchmark"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="podman-benchmark-summary">
+  <prematch>"event_type":\s*"podman.benchmark.summary"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="podman-inventory">
+  <prematch>"event_type":\s*"podman.inventory"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<!-- Rootless Podman writes runtime errors in the same shape as dockerd. -->
+<decoder name="podman-daemon">
+  <program_name>^podman</program_name>
+  <prematch>^time="\d+-\d+-\d+T\d+:\d+:\d+.\d+\w" level=\S+ msg="</prematch>
+  <regex>level=(\S+) msg="(\.+)"</regex>
+  <order>podman_level,podman_message</order>
+</decoder>

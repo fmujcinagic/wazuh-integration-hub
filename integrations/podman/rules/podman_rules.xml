@@ -1,0 +1,236 @@
+<!--
+  Podman container monitoring rules (IDs 100100 - 100199).
+  Collector payloads are namespaced under the "podman" object to avoid
+  collisions with reserved Wazuh fields such as action, type and status.
+-->
+
+<group name="podman,">
+
+  <!-- Container lifecycle -->
+
+  <rule id="100100" level="3">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^create$</field>
+    <description>Podman: container $(podman.container.name) created from $(podman.container.image)</description>
+    <group>podman,podman_container,podman_create,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100101" level="3">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^start$</field>
+    <description>Podman: container $(podman.container.name) started (startup $(podman.startup_ms) ms)</description>
+    <group>podman,podman_container,podman_start,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100102" level="3">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^stop$</field>
+    <description>Podman: container $(podman.container.name) stopped (uptime $(podman.uptime_ms) ms)</description>
+    <group>podman,podman_container,podman_stop,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100103" level="5">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^destroy$</field>
+    <description>Podman: container $(podman.container.name) destroyed</description>
+    <mitre>
+      <id>T1561.001</id>
+    </mitre>
+    <group>podman,podman_container,podman_destroy,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100104" level="7">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^die$</field>
+    <description>Podman: container $(podman.container.name) died (exit code $(podman.exit_code), uptime $(podman.uptime_ms) ms)</description>
+    <group>podman,podman_container,podman_die,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100105" level="10">
+    <if_sid>100104</if_sid>
+    <field name="podman.exit_code" type="pcre2">^(?!0$)\d+$</field>
+    <description>Podman: container $(podman.container.name) exited abnormally with code $(podman.exit_code)</description>
+    <group>podman,podman_container,podman_crash,</group>
+  </rule>
+
+  <rule id="100106" level="12">
+    <if_sid>100104</if_sid>
+    <field name="podman.exit_code">^137$</field>
+    <description>Podman: container $(podman.container.name) killed with SIGKILL (exit 137, possible OOM)</description>
+    <mitre>
+      <id>T1499</id>
+    </mitre>
+    <group>podman,podman_container,podman_crash,podman_oom,</group>
+  </rule>
+
+  <rule id="100107" level="10">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^oom$</field>
+    <description>Podman: container $(podman.container.name) ran out of memory</description>
+    <mitre>
+      <id>T1499</id>
+    </mitre>
+    <group>podman,podman_container,podman_oom,</group>
+  </rule>
+
+  <rule id="100108" level="5">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^kill$</field>
+    <description>Podman: container $(podman.container.name) received SIGKILL</description>
+    <group>podman,podman_container,</group>
+  </rule>
+
+  <rule id="100109" level="3">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^restart$</field>
+    <description>Podman: container $(podman.container.name) restarted</description>
+    <group>podman,podman_container,</group>
+  </rule>
+
+  <rule id="100110" level="8">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^exec$|^exec_died$</field>
+    <description>Podman: command executed in container $(podman.container.name) (exit $(podman.exit_code))</description>
+    <group>podman,podman_container,podman_exec,</group>
+  </rule>
+
+  <rule id="100112" level="3">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^pause$|^unpause$|^init$</field>
+    <description>Podman: container $(podman.container.name) action $(podman.action)</description>
+    <group>podman,podman_container,</group>
+  </rule>
+
+  <rule id="100113" level="3">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.action">^health_status$</field>
+    <description>Podman: container $(podman.container.name) health status changed</description>
+    <group>podman,podman_container,podman_health,</group>
+  </rule>
+
+  <rule id="100114" level="3">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.type">^image$</field>
+    <description>Podman: image action $(podman.action) for $(podman.container.name)</description>
+    <group>podman,podman_image,</group>
+  </rule>
+
+  <rule id="100115" level="3">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.type">^volume$</field>
+    <description>Podman: volume action $(podman.action) for $(podman.container.name)</description>
+    <group>podman,podman_volume,</group>
+  </rule>
+
+  <rule id="100116" level="4">
+    <decoded_as>podman-event</decoded_as>
+    <field name="podman.type">^network$</field>
+    <field name="podman.action">^connect$|^disconnect$</field>
+    <description>Podman: network $(podman.container.name) action $(podman.action)</description>
+    <group>podman,podman_network,</group>
+  </rule>
+
+  <!-- Resource metrics -->
+
+  <rule id="100120" level="3">
+    <decoded_as>podman-stats</decoded_as>
+    <description>Podman: resource statistics for $(podman.container.name)</description>
+    <group>podman,podman_stats,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100121" level="7">
+    <if_sid>100120</if_sid>
+    <field name="podman.cpu_percent" type="pcre2">^(?:[89]\d|\d{3,})(?:\.\d+)?$</field>
+    <description>Podman: container $(podman.container.name) CPU usage above 80% ($(podman.cpu_percent)%)</description>
+    <group>podman,podman_stats,podman_resource,</group>
+  </rule>
+
+  <rule id="100122" level="7">
+    <if_sid>100120</if_sid>
+    <field name="podman.memory_percent" type="pcre2">^(?:[89]\d|\d{3,})(?:\.\d+)?$</field>
+    <description>Podman: container $(podman.container.name) memory usage above 80% ($(podman.memory_percent)%)</description>
+    <group>podman,podman_stats,podman_resource,</group>
+  </rule>
+
+  <rule id="100123" level="10">
+    <if_sid>100120</if_sid>
+    <field name="podman.memory_percent" type="pcre2">^(?:9[5-9]|\d{3,})(?:\.\d+)?$</field>
+    <description>Podman: container $(podman.container.name) memory usage critical ($(podman.memory_percent)%)</description>
+    <group>podman,podman_stats,podman_resource,</group>
+  </rule>
+
+  <!-- Security benchmark -->
+
+  <rule id="100130" level="3">
+    <decoded_as>podman-benchmark</decoded_as>
+    <field name="podman.check.severity">^low$</field>
+    <description>Podman benchmark [$(podman.check.id)] $(podman.check.title) on $(podman.container.name)</description>
+    <group>podman,podman_benchmark,podman_benchmark_low,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100131" level="7">
+    <decoded_as>podman-benchmark</decoded_as>
+    <field name="podman.check.severity">^medium$</field>
+    <description>Podman benchmark [$(podman.check.id)] $(podman.check.title) on $(podman.container.name)</description>
+    <group>podman,podman_benchmark,podman_benchmark_medium,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100132" level="10">
+    <decoded_as>podman-benchmark</decoded_as>
+    <field name="podman.check.severity">^high$</field>
+    <description>Podman benchmark [$(podman.check.id)] $(podman.check.title) on $(podman.container.name)</description>
+    <group>podman,podman_benchmark,podman_benchmark_high,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100133" level="13">
+    <decoded_as>podman-benchmark</decoded_as>
+    <field name="podman.check.severity">^critical$</field>
+    <description>Podman benchmark [$(podman.check.id)] $(podman.check.title) on $(podman.container.name)</description>
+    <mitre>
+      <id>T1610</id>
+      <id>T1611</id>
+    </mitre>
+    <group>podman,podman_benchmark,podman_benchmark_critical,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100134" level="3">
+    <decoded_as>podman-benchmark-summary</decoded_as>
+    <description>Podman benchmark summary: score $(podman.score) with $(podman.findings) findings across $(podman.containers_scanned) containers</description>
+    <group>podman,podman_benchmark,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100135" level="7">
+    <if_sid>100134</if_sid>
+    <field name="podman.score" type="pcre2">^(?:[0-9]|[1-6][0-9])$</field>
+    <description>Podman benchmark score below 70: $(podman.score)</description>
+    <group>podman,podman_benchmark,</group>
+  </rule>
+
+  <rule id="100136" level="10">
+    <if_sid>100132</if_sid>
+    <field name="podman.check.id">^PODMAN-016$</field>
+    <description>Podman: container $(podman.container.name) healthcheck is failing</description>
+    <group>podman,podman_benchmark,podman_health,</group>
+  </rule>
+
+  <!-- Inventory -->
+
+  <rule id="100140" level="3">
+    <decoded_as>podman-inventory</decoded_as>
+    <description>Podman inventory: $(podman.counts.running) running of $(podman.counts.containers) containers</description>
+    <group>podman,podman_inventory,</group>
+    <options>no_full_log</options>
+  </rule>
+
+</group>
