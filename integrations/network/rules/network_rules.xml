@@ -1,0 +1,151 @@
+<!--
+  Network monitoring rules (IDs 101000 - 101099).
+  Collector payloads are namespaced under the "network" object.
+-->
+
+<group name="network,">
+
+  <!-- Interface counters -->
+
+  <rule id="101000" level="3">
+    <decoded_as>network-interface</decoded_as>
+    <description>Network: interface $(network.interface) counters collected</description>
+    <group>network,network_interface,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="101001" level="5">
+    <if_sid>101000</if_sid>
+    <field name="network.rx_errors" type="pcre2">^[1-9]\d*$</field>
+    <description>Network: interface $(network.interface) receive errors ($(network.rx_errors))</description>
+    <group>network,network_interface,network_error,</group>
+  </rule>
+
+  <rule id="101002" level="5">
+    <if_sid>101000</if_sid>
+    <field name="network.tx_errors" type="pcre2">^[1-9]\d*$</field>
+    <description>Network: interface $(network.interface) transmit errors ($(network.tx_errors))</description>
+    <group>network,network_interface,network_error,</group>
+  </rule>
+
+  <rule id="101003" level="3">
+    <if_sid>101000</if_sid>
+    <field name="network.rx_dropped" type="pcre2">^[1-9]\d*$</field>
+    <description>Network: interface $(network.interface) dropped $(network.rx_dropped) received packets</description>
+    <group>network,network_interface,network_drop,</group>
+  </rule>
+
+  <rule id="101004" level="3">
+    <if_sid>101000</if_sid>
+    <field name="network.tx_dropped" type="pcre2">^[1-9]\d*$</field>
+    <description>Network: interface $(network.interface) dropped $(network.tx_dropped) transmitted packets</description>
+    <group>network,network_interface,network_drop,</group>
+  </rule>
+
+  <!-- Wazuh agent-manager connections -->
+
+  <rule id="101010" level="3">
+    <decoded_as>network-connection</decoded_as>
+    <description>Network: Wazuh connection $(network.local) to $(network.peer)</description>
+    <group>network,network_connection,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="101011" level="5">
+    <if_sid>101010</if_sid>
+    <field name="network.bytes_retrans" type="pcre2">^[1-9]\d*$</field>
+    <description>Network: Wazuh connection to $(network.peer) retransmitted $(network.bytes_retrans) bytes</description>
+    <group>network,network_connection,network_retrans,</group>
+  </rule>
+
+  <rule id="101012" level="7">
+    <if_sid>101010</if_sid>
+    <field name="network.rtt_ms" type="pcre2">^(?:[1-9]\d{2,})(?:\.\d+)?$</field>
+    <description>Network: Wazuh connection to $(network.peer) round trip time above 100 ms ($(network.rtt_ms) ms)</description>
+    <group>network,network_connection,network_latency,</group>
+  </rule>
+
+  <!-- Aggregated Wazuh traffic -->
+
+  <rule id="101020" level="3">
+    <decoded_as>network-wazuh</decoded_as>
+    <description>Network: $(network.connections) Wazuh connections, sent $(network.bytes_sent) bytes, received $(network.bytes_received) bytes</description>
+    <group>network,network_wazuh,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="101021" level="8">
+    <if_sid>101020</if_sid>
+    <field name="network.connections">^0$</field>
+    <description>Network: no active Wazuh connection to $(network.manager)</description>
+    <group>network,network_wazuh,network_disconnect,</group>
+  </rule>
+
+  <rule id="101022" level="7">
+    <if_sid>101020</if_sid>
+    <field name="network.retrans_rate" type="pcre2">^[1-9]\d*(?:\.\d+)?$</field>
+    <description>Network: Wazuh traffic retransmission rate $(network.retrans_rate) segments/s</description>
+    <group>network,network_wazuh,network_retrans,</group>
+  </rule>
+
+  <rule id="101023" level="7">
+    <if_sid>101020</if_sid>
+    <field name="network.rate_sent_bps" type="pcre2">^\d{7,}$</field>
+    <description>Network: Wazuh uplink above 10 Mbps ($(network.rate_sent_bps) bps)</description>
+    <group>network,network_wazuh,network_bandwidth,</group>
+  </rule>
+
+  <rule id="101024" level="7">
+    <if_sid>101020</if_sid>
+    <field name="network.rate_received_bps" type="pcre2">^\d{7,}$</field>
+    <description>Network: Wazuh downlink above 10 Mbps ($(network.rate_received_bps) bps)</description>
+    <group>network,network_wazuh,network_bandwidth,</group>
+  </rule>
+
+  <!-- TCP stack counters -->
+
+  <rule id="101030" level="3">
+    <decoded_as>network-snmp</decoded_as>
+    <description>Network: TCP segments in $(network.tcp_in_segs), out $(network.tcp_out_segs), retransmitted $(network.tcp_retrans_segs)</description>
+    <group>network,network_snmp,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="101031" level="7">
+    <if_sid>101030</if_sid>
+    <field name="network.retrans_rate" type="pcre2">^[1-9]\d{1,}(?:\.\d+)?$</field>
+    <description>Network: TCP retransmission rate above 10 segments/s ($(network.retrans_rate))</description>
+    <group>network,network_snmp,network_retrans,</group>
+  </rule>
+
+  <rule id="101032" level="5">
+    <if_sid>101030</if_sid>
+    <field name="network.tcp_in_errs" type="pcre2">^[1-9]\d*$</field>
+    <description>Network: TCP receive errors ($(network.tcp_in_errs))</description>
+    <group>network,network_snmp,network_error,</group>
+  </rule>
+
+  <!-- Latency to the manager -->
+
+  <rule id="101040" level="3">
+    <decoded_as>network-latency</decoded_as>
+    <description>Network: latency to $(network.target) is $(network.rtt_ms) ms</description>
+    <group>network,network_latency,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="101041" level="7">
+    <if_sid>101040</if_sid>
+    <field name="network.rtt_ms" type="pcre2">^(?:[1-9]\d{2,})(?:\.\d+)?$</field>
+    <description>Network: latency to $(network.target) above 100 ms ($(network.rtt_ms) ms)</description>
+    <group>network,network_latency,</group>
+  </rule>
+
+  <rule id="101042" level="10">
+    <if_sid>101040</if_sid>
+    <field name="network.rtt_ms" type="pcre2">^(?:[5-9]\d{2}|\d{4,})(?:\.\d+)?$</field>
+    <description>Network: latency to $(network.target) above 500 ms ($(network.rtt_ms) ms)</description>
+    <group>network,network_latency,</group>
+  </rule>
+
+</group>

@@ -1,0 +1,30 @@
+<!--
+  Network monitoring decoders. Installed as
+  ruleset/decoders/0005b-network_decoders.xml so they are evaluated before
+  the generic JSON decoder.
+-->
+
+<decoder name="network-interface">
+  <prematch>"event_type":\s*"network.interface"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="network-connection">
+  <prematch>"event_type":\s*"network.connection"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="network-wazuh">
+  <prematch>"event_type":\s*"network.wazuh"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="network-snmp">
+  <prematch>"event_type":\s*"network.snmp"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="network-latency">
+  <prematch>"event_type":\s*"network.latency"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>

@@ -1,0 +1,8 @@
+<!--
+  Add this to the Wazuh agent configuration and mount the monitor log
+  directory at /var/log/network in the agent container.
+-->
+  <localfile>
+    <log_format>json</log_format>
+    <location>/var/log/network/network.json</location>
+  </localfile>
