@@ -1,0 +1,14 @@
+[Unit]
+Description=Wazuh network bandwidth monitor
+After=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/wazuh-network.conf
+Environment=NETWORK_MONITOR_LOG_DIR=%h/.local/state/wazuh-network
+ExecStart=/usr/bin/python3 %h/.local/share/wazuh-network/network_monitor.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
