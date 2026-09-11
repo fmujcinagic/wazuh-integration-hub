@@ -67,3 +67,11 @@ the same host.
 
 * Provisioning and attestation for AI agent deployments, including LiteLLM and
   Langfuse observability.
+
+## Credits
+
+Wazuh is developed by Wazuh, Inc. and licensed under GPLv2. This project
+integrates with Wazuh, uses the official Wazuh agent container image, and its
+agent configuration is based on the Wazuh agent default configuration. Wazuh
+is a trademark of Wazuh, Inc. All other code in this repository is original.
+
