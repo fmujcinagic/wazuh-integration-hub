@@ -1,0 +1,74 @@
+{
+  "index_patterns": ["wazuh-alerts-*"],
+  "order": 1,
+  "mappings": {
+    "properties": {
+      "data": {
+        "properties": {
+          "event_type": { "type": "keyword" },
+          "podman": {
+            "properties": {
+              "action": { "type": "keyword" },
+              "type": { "type": "keyword" },
+              "event_time": { "type": "date" },
+              "evidence": { "type": "keyword" },
+              "cpu_percent": { "type": "float" },
+              "memory_percent": { "type": "float" },
+              "memory_used_bytes": { "type": "long" },
+              "memory_limit_bytes": { "type": "long" },
+              "network_rx_bytes": { "type": "long" },
+              "network_tx_bytes": { "type": "long" },
+              "block_read_bytes": { "type": "long" },
+              "block_write_bytes": { "type": "long" },
+              "pids": { "type": "long" },
+              "startup_ms": { "type": "long" },
+              "uptime_ms": { "type": "long" },
+              "exit_code": { "type": "long" },
+              "score": { "type": "long" },
+              "findings": { "type": "long" },
+              "containers_scanned": { "type": "long" },
+              "critical": { "type": "long" },
+              "high": { "type": "long" },
+              "medium": { "type": "long" },
+              "low": { "type": "long" },
+              "container": {
+                "properties": {
+                  "id": { "type": "keyword" },
+                  "name": { "type": "keyword" },
+                  "image": { "type": "keyword" },
+                  "state": { "type": "keyword" }
+                }
+              },
+              "check": {
+                "properties": {
+                  "id": { "type": "keyword" },
+                  "title": { "type": "keyword" },
+                  "severity": { "type": "keyword" },
+                  "status": { "type": "keyword" }
+                }
+              },
+              "engine": {
+                "properties": {
+                  "version": { "type": "keyword" },
+                  "storage_driver": { "type": "keyword" },
+                  "rootless": { "type": "boolean" },
+                  "cgroup_version": { "type": "keyword" }
+                }
+              },
+              "counts": {
+                "properties": {
+                  "containers": { "type": "long" },
+                  "running": { "type": "long" },
+                  "stopped": { "type": "long" },
+                  "images": { "type": "long" },
+                  "volumes": { "type": "long" },
+                  "networks": { "type": "long" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
