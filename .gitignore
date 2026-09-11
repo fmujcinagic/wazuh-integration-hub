@@ -1,0 +1,4 @@
+dont-push/
+*.log
+__pycache__/
+*.pyc
