@@ -32,11 +32,3 @@
   <prematch>"event_type":\s*"podman.inventory"</prematch>
   <plugin_decoder>JSON_Decoder</plugin_decoder>
 </decoder>
-
-<!-- Rootless Podman writes runtime errors in the same shape as dockerd. -->
-<decoder name="podman-daemon">
-  <program_name>^podman</program_name>
-  <prematch>^time="\d+-\d+-\d+T\d+:\d+:\d+.\d+\w" level=\S+ msg="</prematch>
-  <regex>level=(\S+) msg="(\.+)"</regex>
-  <order>podman_level,podman_message</order>
-</decoder>
