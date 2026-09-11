@@ -1,0 +1,48 @@
+{
+  "index_patterns": ["wazuh-alerts-*"],
+  "order": 2,
+  "mappings": {
+    "properties": {
+      "data": {
+        "properties": {
+          "network": {
+            "properties": {
+              "interface": { "type": "keyword" },
+              "local": { "type": "keyword" },
+              "peer": { "type": "keyword" },
+              "state": { "type": "keyword" },
+              "manager": { "type": "keyword" },
+              "target": { "type": "keyword" },
+              "rx_bytes": { "type": "long" },
+              "tx_bytes": { "type": "long" },
+              "rx_packets": { "type": "long" },
+              "tx_packets": { "type": "long" },
+              "rx_errors": { "type": "long" },
+              "tx_errors": { "type": "long" },
+              "rx_dropped": { "type": "long" },
+              "tx_dropped": { "type": "long" },
+              "rx_rate_bps": { "type": "long" },
+              "tx_rate_bps": { "type": "long" },
+              "bytes_sent": { "type": "long" },
+              "bytes_received": { "type": "long" },
+              "bytes_retrans": { "type": "long" },
+              "connections": { "type": "long" },
+              "cwnd": { "type": "long" },
+              "segs_out": { "type": "long" },
+              "segs_in": { "type": "long" },
+              "rtt_ms": { "type": "float" },
+              "minrtt_ms": { "type": "float" },
+              "retrans_rate": { "type": "float" },
+              "rate_sent_bps": { "type": "long" },
+              "rate_received_bps": { "type": "long" },
+              "tcp_retrans_segs": { "type": "long" },
+              "tcp_out_segs": { "type": "long" },
+              "tcp_in_segs": { "type": "long" },
+              "tcp_in_errs": { "type": "long" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
