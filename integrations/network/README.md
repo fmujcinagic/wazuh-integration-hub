@@ -46,8 +46,8 @@ scripts/
   network_monitor.py         collector
   network-monitor.service    systemd user unit
   install.sh                 installs and starts the service
-agent/
-  ossec.conf.snippet         localfile block for the agent
+snippets/
+  ossec.conf                 localfile block for the agent
 decoders/
   network_decoders.xml       named decoders per event type
 rules/
@@ -96,7 +96,7 @@ This installs `network_monitor.py` under `~/.local/share/wazuh-network/`, a
 systemd user service, and starts it. The log is written to
 `~/.local/state/wazuh-network/network.json`.
 
-Then add the localfile from `agent/ossec.conf.snippet` to the agent
+A running Wazuh agent is assumed. Add the localfile from `snippets/ossec.conf` to the agent
 configuration and mount the log directory at `/var/log/network` in the agent
 container. For a containerized agent:
 
@@ -121,6 +121,54 @@ curl -sk -u admin:SecretPassword -H 'osd-xsrf: true' \
 The template is a legacy template with `order: 2`, so it merges with the
 `wazuh` template that Filebeat installs. Do not use a composable template, as
 any matching composable template disables the legacy `wazuh` mappings.
+
+## Standard Wazuh deployment
+
+The integration works with any Wazuh manager and agent, including a native
+installation running as systemd services.
+
+### Manager
+
+Copy the decoder and the rules, then restart the manager:
+
+```
+sudo install -m 0640 -o root -g wazuh \
+  decoders/network_decoders.xml /var/ossec/ruleset/decoders/0005b-network_decoders.xml
+sudo install -m 0640 -o root -g wazuh \
+  rules/network_rules.xml /var/ossec/etc/rules/network_rules.xml
+sudo systemctl restart wazuh-manager
+```
+
+The decoder is installed under `ruleset/decoders/` with a `0005b-` prefix so it
+is read before `0006-json_decoders.xml`. If it is placed in `etc/decoders/`
+instead, the generic JSON decoder matches first and the `decoded_as` names do
+not take effect.
+
+Verify with a sample event:
+
+```
+echo '{"event_type":"network.latency","network":{"target":"127.0.0.1","rtt_ms":1.2}}' \
+  | sudo /var/ossec/bin/wazuh-logtest
+```
+
+### Agent
+
+Add the localfile from `snippets/ossec.conf` to `/var/ossec/etc/ossec.conf`.
+A native agent reads the collector log directly, so set the location to the
+collector state file:
+
+```
+<localfile>
+  <log_format>json</log_format>
+  <location>/home/<user>/.local/state/wazuh-network/network.json</location>
+</localfile>
+```
+
+Then restart the agent:
+
+```
+sudo systemctl restart wazuh-agent
+```
 
 ## Dashboards
 

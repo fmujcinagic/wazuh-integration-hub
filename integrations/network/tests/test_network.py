@@ -9,7 +9,7 @@ import sys
 import time
 import urllib.request
 
-MANAGER_CONTAINER = os.environ.get("WAZUH_MANAGER_CONTAINER", "podman-single-node_wazuh.manager_1")
+MANAGER_CONTAINER = os.environ.get("WAZUH_MANAGER_CONTAINER", "wazuh.manager")
 ALERTS = os.environ.get("WAZUH_ALERTS", "/var/ossec/logs/alerts/alerts.json")
 NETWORK_LOG = os.environ.get("NETWORK_MONITOR_LOG", os.path.expanduser("~/.local/state/wazuh-network/network.json"))
 TIMEOUT = int(os.environ.get("WAZUH_TEST_TIMEOUT", "90"))
