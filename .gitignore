@@ -1,4 +1,4 @@
-dont-push/
+.secrets/
 *.log
 __pycache__/
 *.pyc
