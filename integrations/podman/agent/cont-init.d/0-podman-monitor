@@ -1,9 +1,0 @@
-#!/usr/bin/with-contenv bash
-
-LOG_DIR="${PODMAN_MONITOR_LOG_DIR:-/var/log/podman}"
-mkdir -p "$LOG_DIR"
-touch "$LOG_DIR/podman.json"
-
-NET_DIR="${NETWORK_MONITOR_LOG_DIR:-/var/log/network}"
-mkdir -p "$NET_DIR" 2>/dev/null || true
-touch "$NET_DIR/network.json" 2>/dev/null || true

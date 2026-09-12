@@ -6,26 +6,26 @@ index template and a dashboard.
 
 ## How it works
 
-Podman exposes a Docker-compatible API on its user socket. A small collector
-runs inside the Wazuh agent container, talks to that API and writes one JSON
-document per line to a local log file. The Wazuh logcollector tails the file
-and forwards each event to the manager, where custom decoders and rules turn
-them into alerts. The alerts are indexed and rendered in the Podman dashboard.
+Podman exposes a Docker-compatible API on its user socket. A collector runs as
+a systemd user service on the monitored host, talks to that API and writes one
+JSON document per line to a local log file. The Wazuh agent tails the file and
+forwards each event to the manager, where custom decoders and rules turn them
+into alerts. The alerts are indexed and rendered in the Podman dashboard.
 
 ```
 podman API (unix socket)
         |
         v
-podman_monitor.py  ->  /var/log/podman/podman.json
+podman_monitor.py  ->  ~/.local/state/wazuh-podman/podman.json
         |                        |
         |                        v
-        |               wazuh-logcollector
+        |               wazuh-logcollector (agent)
         |                        |
         v                        v
    (security checks)      wazuh-manager  ->  decoders/rules  ->  indexer  ->  dashboard
 ```
 
-The collector emits four event types:
+The collector emits five event types:
 
 | event_type | Description |
 | --- | --- |
@@ -38,13 +38,12 @@ The collector emits four event types:
 ## Layout
 
 ```
-agent/
-  Containerfile              agent image with the docker SDK and the collector
+scripts/
   podman_monitor.py          collector
-  ossec.conf                 agent configuration
-  run-agent.sh               build and launch the agent
-  cont-init.d/               creates the log file before logcollector starts
-  services.d/                s6 service that supervises the collector
+  podman-monitor.service     systemd user unit
+  install.sh                 installs and starts the collector
+snippets/
+  ossec.conf                 localfile block for the agent
 decoders/
   podman_decoders.xml        named decoders per event type
 rules/
@@ -67,7 +66,6 @@ named decoder and let the JSON decoder extract every field:
 * `podman-benchmark`
 * `podman-benchmark-summary`
 * `podman-inventory`
-* `podman-daemon` (Podman runtime errors in dockerd log format)
 
 The file is installed as `ruleset/decoders/0005a-podman_decoders.xml` so it is
 evaluated before the generic JSON decoder and the `decoded_as` names take
@@ -172,33 +170,91 @@ Apply it before the first alert is indexed, or delete the current daily
 `build_dashboards.py` recreates and re-exports the saved objects when the
 visualizations change.
 
-## Deploying the agent
+## Collector
 
-The agent runs as a rootless Podman container. It needs the Podman socket and
-a Docker-compatible client, both provided by the image.
-
-```
-# on the monitored host
-systemctl --user enable --now podman.socket
-WAZUH_MANAGER_SERVER=192.168.122.1 WAZUH_AGENT_NAME=myhost \
-  ./agent/run-agent.sh
-```
-
-The agent enrolls automatically and joins the `podman` group. Create the group
-on the manager first:
+The collector runs as a systemd user service on the monitored host, talks to
+the Podman API and writes JSONL to `~/.local/state/wazuh-podman/podman.json`.
+It needs the Podman socket and the `docker` Python package.
 
 ```
-curl -sk -u wazuh-wui:'password' -X POST \
-  -H 'Authorization: Bearer <token>' -H 'Content-Type: application/json' \
-  -d '{"group_id":"podman"}' https://localhost:55000/groups
+./scripts/install.sh
 ```
 
-On SELinux hosts the script adds `--security-opt label=disable` so the agent
-can read the user Podman socket.
+The script creates a virtual environment with the `docker` package, installs
+the service, enables `podman.socket` and starts the collector. To remove it:
 
-The agent configuration also tails `/var/log/network/network.json` and
-`run-agent.sh` mounts the network monitor state directory, so the same agent
-reports the network integration when it is installed.
+```
+systemctl --user disable --now podman-monitor.service
+```
+
+## Containerized agent
+
+A running Wazuh agent is assumed. Add the localfile from `snippets/ossec.conf`
+to the agent configuration and mount the monitor log directory at
+`/var/log/podman` in the agent container:
+
+```
+podman run ... \
+  -v "$HOME/.local/state/wazuh-podman":/var/log/podman:ro \
+  ...
+```
+
+The agent joins the `podman` group. Create the group on the manager first if it
+does not exist.
+
+## Standard Wazuh deployment
+
+The integration works with any Wazuh manager and agent, including a native
+installation running as systemd services.
+
+### Manager
+
+Copy the decoder and the rules, then restart the manager:
+
+```
+sudo install -m 0640 -o root -g wazuh \
+  decoders/podman_decoders.xml /var/ossec/ruleset/decoders/0005a-podman_decoders.xml
+sudo install -m 0640 -o root -g wazuh \
+  rules/podman_rules.xml /var/ossec/etc/rules/podman_rules.xml
+sudo systemctl restart wazuh-manager
+```
+
+The decoder is installed under `ruleset/decoders/` with a `0005a-` prefix so it
+is read before `0006-json_decoders.xml`. If it is placed in `etc/decoders/`
+instead, the generic JSON decoder matches first and the `decoded_as` names do
+not take effect.
+
+Verify with a sample event:
+
+```
+echo '{"event_type":"podman.stats","podman":{"container":{"name":"test"},"cpu_percent":1}}' \
+  | sudo /var/ossec/bin/wazuh-logtest
+```
+
+### Agent
+
+Add the localfile from `snippets/ossec.conf` to `/var/ossec/etc/ossec.conf`.
+A native agent reads the collector log directly, so set the location to the
+collector state file:
+
+```
+<localfile>
+  <log_format>json</log_format>
+  <location>/home/<user>/.local/state/wazuh-podman/podman.json</location>
+</localfile>
+```
+
+Then restart the agent:
+
+```
+sudo systemctl restart wazuh-agent
+```
+
+### Indexer and dashboard
+
+Apply the index template and import the dashboard as shown in the Dashboards
+section. The indexer listens on 9200 and the dashboard on 443 or 8443
+depending on the deployment.
 
 ## Testing
 
@@ -217,10 +273,8 @@ memory measurements, indexer coverage and the dashboard saved object.
 
 ## Notes
 
-* The `docker-listener` wodle is disabled because the collector already reports
-  lifecycle events with more attributes. It can be enabled instead, since the
-  Podman API is Docker-compatible, but then the stock Wazuh docker rules are
-  used and lifecycle events are reported twice.
+* The collector talks to the Podman API directly, so no Docker daemon or
+  docker-listener wodle is involved.
 * Podman health events do not carry the health state, so the healthcheck check
   is evaluated from the container inspect data during each benchmark scan.
 * Podman exec events do not include the executed command, so shell detection is

@@ -9,8 +9,10 @@ import time
 import urllib.request
 import ssl
 
-MANAGER_CONTAINER = os.environ.get("WAZUH_MANAGER_CONTAINER", "podman-single-node_wazuh.manager_1")
-AGENT_CONTAINER = os.environ.get("WAZUH_AGENT_CONTAINER", "wazuh-agent-podman")
+MANAGER_CONTAINER = os.environ.get("WAZUH_MANAGER_CONTAINER", "wazuh.manager")
+PODMAN_MONITOR = os.environ.get("PODMAN_MONITOR", os.path.expanduser("~/.local/share/wazuh-podman/venv/bin/python"))
+PODMAN_MONITOR_SCRIPT = os.environ.get("PODMAN_MONITOR_SCRIPT", os.path.expanduser("~/.local/share/wazuh-podman/podman_monitor.py"))
+PODMAN_MONITOR_LOG_DIR = os.environ.get("PODMAN_MONITOR_LOG_DIR", os.path.expanduser("~/.local/state/wazuh-podman"))
 ALERTS = os.environ.get("WAZUH_ALERTS", "/var/ossec/logs/alerts/alerts.json")
 TIMEOUT = int(os.environ.get("WAZUH_TEST_TIMEOUT", "90"))
 INDEXER_URL = os.environ.get("WAZUH_INDEXER_URL", "https://localhost:9200")
@@ -65,22 +67,24 @@ def wait_for_rules(mark, rule_ids, timeout=TIMEOUT):
     return set(), alerts
 
 
-def force_benchmark():
-    podman("exec", AGENT_CONTAINER, "python3", "/opt/podman-monitor/podman_monitor.py",
-           "--once-benchmark")
+def run_collector(flag):
+    env = dict(os.environ)
+    env.setdefault("DOCKER_HOST", f"unix:///run/user/{os.getuid()}/podman/podman.sock")
+    env["PODMAN_MONITOR_LOG_DIR"] = PODMAN_MONITOR_LOG_DIR
+    subprocess.run([PODMAN_MONITOR, PODMAN_MONITOR_SCRIPT, flag], env=env, capture_output=True)
     time.sleep(2)
+
+
+def force_benchmark():
+    run_collector("--once-benchmark")
 
 
 def force_stats():
-    podman("exec", AGENT_CONTAINER, "python3", "/opt/podman-monitor/podman_monitor.py",
-           "--once-stats")
-    time.sleep(2)
+    run_collector("--once-stats")
 
 
 def force_inventory():
-    podman("exec", AGENT_CONTAINER, "python3", "/opt/podman-monitor/podman_monitor.py",
-           "--once-inventory")
-    time.sleep(2)
+    run_collector("--once-inventory")
 
 
 def cleanup(name):

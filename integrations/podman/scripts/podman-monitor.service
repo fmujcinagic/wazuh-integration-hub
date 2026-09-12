@@ -1,0 +1,14 @@
+[Unit]
+Description=Wazuh Podman container monitor
+After=podman.socket
+
+[Service]
+Type=simple
+Environment=DOCKER_HOST=unix://%t/podman/podman.sock
+Environment=PODMAN_MONITOR_LOG_DIR=%h/.local/state/wazuh-podman
+ExecStart=%h/.local/share/wazuh-podman/venv/bin/python %h/.local/share/wazuh-podman/podman_monitor.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
