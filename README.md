@@ -1,4 +1,4 @@
-# wazuh-integration-hub
+# Wazuh Podman & Network Bandwidth Monitoring - Decoders/Rules/Dashboards/Benchmark
 
 Wazuh contribution to integrations in the sense of Podman container lifecycle monitoring and the network bandwidth monitoring.
 As of the moment of contributing/writing, Wazuh has no out-of-box (documented) integrations for these needs, eventhough they are highly applicable in today's industry. 
