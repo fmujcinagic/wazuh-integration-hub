@@ -1,8 +1,10 @@
 # wazuh-integration-hub
 
-Open source Wazuh integrations. Each integration ships its own collector,
-decoders, rules, dashboards and tests, and can be loaded into any Wazuh
-manager.
+Wazuh contribution to integrations in the sense of Podman container lifecycle monitoring and the network bandwidth monitoring.
+As of the moment of contributing/writing, Wazuh has no out-of-box (documented) integrations for these needs, eventhough they are highly applicable in today's industry. 
+
+Each integration ships its own collector, decoders, rules, dashboards and tests, and can be loaded into any Wazuh
+manager. Please refer to the details in the `network` and `podman` folders for detailed overview and integration of the decoders/rules/dashboards depending on the way you deployed the Wazuh stack.
 
 ## Contents
 
@@ -63,12 +65,14 @@ python3 integrations/network/tests/test_network.py
 Both suites require a running Wazuh manager container and an enrolled agent on
 the same host.
 
-## Roadmap
+## Future work...
 
 * Provisioning and attestation for AI agent deployments, including LiteLLM and
   Langfuse observability.
 
-## Credits
+## License and credits
+
+This repository is licensed under GPLv2, see `LICENSE`.
 
 Wazuh is developed by Wazuh, Inc. and licensed under GPLv2. This project
 integrates with Wazuh, uses the official Wazuh agent container image, and its
