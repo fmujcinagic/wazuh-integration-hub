@@ -93,8 +93,14 @@ WAZUH_MANAGER_SERVER=<manager-ip> ./scripts/install.sh
 ```
 
 This installs `network_monitor.py` under `~/.local/share/wazuh-network/`, a
-systemd user service, and starts it. The log is written to
-`~/.local/state/wazuh-network/network.json`.
+systemd user service, and starts it. The service then runs in the background
+until it is stopped or removed with:
+
+```
+systemctl --user disable --now network-monitor.service
+```
+
+The log is written to `~/.local/state/wazuh-network/network.json`.
 
 A running Wazuh agent is assumed. Add the localfile from `snippets/ossec.conf` to the agent
 configuration and mount the log directory at `/var/log/network` in the agent

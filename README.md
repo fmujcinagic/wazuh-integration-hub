@@ -6,16 +6,6 @@ As of the moment of contributing/writing, Wazuh has no out-of-box (documented) i
 Each integration ships its own collector, decoders, rules, dashboards and tests, and can be loaded into any Wazuh
 manager. Please refer to the details in the `network` and `podman` folders for detailed overview and integration of the decoders/rules/dashboards depending on the way you deployed the Wazuh stack.
 
-## Contents
-
-```
-integrations/podman/    Container lifecycle, resource usage and security benchmark
-integrations/network/   Agent-manager bandwidth, retransmissions and latency
-```
-
-The rootless Podman deployment of the Wazuh stack used to develop and test the
-integrations lives in a separate repository: `wazuh-rootless-podman`.
-
 ## Podman container monitoring
 
 Collects container lifecycle events, resource usage and a security benchmark
@@ -43,6 +33,12 @@ Collects host network counters and the TCP sockets used by Wazuh.
 * Eight visualizations and one dashboard
 
 See `integrations/network/README.md`.
+
+
+![Podman dashboard](screenshots/podman-dashboard.png)
+
+
+![Network dashboard](screenshots/network-dashboard.png)
 
 ## Loading an integration
 

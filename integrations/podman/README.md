@@ -181,7 +181,8 @@ It needs the Podman socket and the `docker` Python package.
 ```
 
 The script creates a virtual environment with the `docker` package, installs
-the service, enables `podman.socket` and starts the collector. To remove it:
+the service, enables `podman.socket` and starts the collector. The service
+then runs in the background until it is stopped or removed with:
 
 ```
 systemctl --user disable --now podman-monitor.service
