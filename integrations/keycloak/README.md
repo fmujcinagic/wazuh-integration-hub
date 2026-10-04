@@ -98,6 +98,12 @@ and the `Keycloak Authentication Monitoring` dashboard: login trends,
 failures by error, top users, failed sources, the successful login metric
 and brute force findings.
 
+## Screenshots
+
+![Keycloak dashboard](../../screenshots/keycloak-dashboard.png)
+
+![Keycloak alerts](../../screenshots/keycloak-alerts.png)
+
 ## Testing
 
 ```

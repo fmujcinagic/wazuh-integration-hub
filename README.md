@@ -54,6 +54,10 @@ See `integrations/keycloak/README.md`.
 
 ![Network dashboard](screenshots/network-dashboard.png)
 
+![Keycloak dashboard](screenshots/keycloak-dashboard.png)
+
+![Keycloak alerts](screenshots/keycloak-alerts.png)
+
 ## Loading an integration
 
 Each integration provides a collector, an agent configuration snippet and an
