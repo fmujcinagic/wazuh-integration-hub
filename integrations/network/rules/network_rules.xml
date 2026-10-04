@@ -8,7 +8,8 @@
   <!-- Interface counters -->
 
   <rule id="101000" level="3">
-    <decoded_as>network-interface</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^network.interface$</field>
     <description>Network: interface $(network.interface) counters collected</description>
     <group>network,network_interface,</group>
     <options>no_full_log</options>
@@ -45,7 +46,8 @@
   <!-- Wazuh agent-manager connections -->
 
   <rule id="101010" level="3">
-    <decoded_as>network-connection</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^network.connection$</field>
     <description>Network: Wazuh connection $(network.local) to $(network.peer)</description>
     <group>network,network_connection,</group>
     <options>no_full_log</options>
@@ -68,7 +70,8 @@
   <!-- Aggregated Wazuh traffic -->
 
   <rule id="101020" level="3">
-    <decoded_as>network-wazuh</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^network.wazuh$</field>
     <description>Network: $(network.connections) Wazuh connections, sent $(network.bytes_sent) bytes, received $(network.bytes_received) bytes</description>
     <group>network,network_wazuh,</group>
     <options>no_full_log</options>
@@ -105,7 +108,8 @@
   <!-- TCP stack counters -->
 
   <rule id="101030" level="3">
-    <decoded_as>network-snmp</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^network.snmp$</field>
     <description>Network: TCP segments in $(network.tcp_in_segs), out $(network.tcp_out_segs), retransmitted $(network.tcp_retrans_segs)</description>
     <group>network,network_snmp,</group>
     <options>no_full_log</options>
@@ -128,7 +132,8 @@
   <!-- Latency to the manager -->
 
   <rule id="101040" level="3">
-    <decoded_as>network-latency</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^network.latency$</field>
     <description>Network: latency to $(network.target) is $(network.rtt_ms) ms</description>
     <group>network,network_latency,</group>
     <options>no_full_log</options>

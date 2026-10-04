@@ -9,7 +9,8 @@
   <!-- Container lifecycle -->
 
   <rule id="100100" level="3">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^create$</field>
     <description>Podman: container $(podman.container.name) created from $(podman.container.image)</description>
     <group>podman,podman_container,podman_create,</group>
@@ -17,7 +18,8 @@
   </rule>
 
   <rule id="100101" level="3">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^start$</field>
     <description>Podman: container $(podman.container.name) started (startup $(podman.startup_ms) ms)</description>
     <group>podman,podman_container,podman_start,</group>
@@ -25,7 +27,8 @@
   </rule>
 
   <rule id="100102" level="3">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^stop$</field>
     <description>Podman: container $(podman.container.name) stopped (uptime $(podman.uptime_ms) ms)</description>
     <group>podman,podman_container,podman_stop,</group>
@@ -33,7 +36,8 @@
   </rule>
 
   <rule id="100103" level="5">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^destroy$</field>
     <description>Podman: container $(podman.container.name) destroyed</description>
     <mitre>
@@ -44,7 +48,8 @@
   </rule>
 
   <rule id="100104" level="7">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^die$</field>
     <description>Podman: container $(podman.container.name) died (exit code $(podman.exit_code), uptime $(podman.uptime_ms) ms)</description>
     <group>podman,podman_container,podman_die,</group>
@@ -69,7 +74,8 @@
   </rule>
 
   <rule id="100107" level="10">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^oom$</field>
     <description>Podman: container $(podman.container.name) ran out of memory</description>
     <mitre>
@@ -79,56 +85,64 @@
   </rule>
 
   <rule id="100108" level="5">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^kill$</field>
     <description>Podman: container $(podman.container.name) received SIGKILL</description>
     <group>podman,podman_container,</group>
   </rule>
 
   <rule id="100109" level="3">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^restart$</field>
     <description>Podman: container $(podman.container.name) restarted</description>
     <group>podman,podman_container,</group>
   </rule>
 
   <rule id="100110" level="8">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^exec$|^exec_died$</field>
     <description>Podman: command executed in container $(podman.container.name) (exit $(podman.exit_code))</description>
     <group>podman,podman_container,podman_exec,</group>
   </rule>
 
   <rule id="100112" level="3">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^pause$|^unpause$|^init$</field>
     <description>Podman: container $(podman.container.name) action $(podman.action)</description>
     <group>podman,podman_container,</group>
   </rule>
 
   <rule id="100113" level="3">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.action">^health_status$</field>
     <description>Podman: container $(podman.container.name) health status changed</description>
     <group>podman,podman_container,podman_health,</group>
   </rule>
 
   <rule id="100114" level="3">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.type">^image$</field>
     <description>Podman: image action $(podman.action) for $(podman.container.name)</description>
     <group>podman,podman_image,</group>
   </rule>
 
   <rule id="100115" level="3">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.type">^volume$</field>
     <description>Podman: volume action $(podman.action) for $(podman.container.name)</description>
     <group>podman,podman_volume,</group>
   </rule>
 
   <rule id="100116" level="4">
-    <decoded_as>podman-event</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.event$</field>
     <field name="podman.type">^network$</field>
     <field name="podman.action">^connect$|^disconnect$</field>
     <description>Podman: network $(podman.container.name) action $(podman.action)</description>
@@ -138,7 +152,8 @@
   <!-- Resource metrics -->
 
   <rule id="100120" level="3">
-    <decoded_as>podman-stats</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.stats$</field>
     <description>Podman: resource statistics for $(podman.container.name)</description>
     <group>podman,podman_stats,</group>
     <options>no_full_log</options>
@@ -168,7 +183,8 @@
   <!-- Security benchmark -->
 
   <rule id="100130" level="3">
-    <decoded_as>podman-benchmark</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.benchmark$</field>
     <field name="podman.check.severity">^low$</field>
     <description>Podman benchmark [$(podman.check.id)] $(podman.check.title) on $(podman.container.name)</description>
     <group>podman,podman_benchmark,podman_benchmark_low,</group>
@@ -176,7 +192,8 @@
   </rule>
 
   <rule id="100131" level="7">
-    <decoded_as>podman-benchmark</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.benchmark$</field>
     <field name="podman.check.severity">^medium$</field>
     <description>Podman benchmark [$(podman.check.id)] $(podman.check.title) on $(podman.container.name)</description>
     <group>podman,podman_benchmark,podman_benchmark_medium,</group>
@@ -184,7 +201,8 @@
   </rule>
 
   <rule id="100132" level="10">
-    <decoded_as>podman-benchmark</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.benchmark$</field>
     <field name="podman.check.severity">^high$</field>
     <description>Podman benchmark [$(podman.check.id)] $(podman.check.title) on $(podman.container.name)</description>
     <group>podman,podman_benchmark,podman_benchmark_high,</group>
@@ -192,7 +210,8 @@
   </rule>
 
   <rule id="100133" level="13">
-    <decoded_as>podman-benchmark</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.benchmark$</field>
     <field name="podman.check.severity">^critical$</field>
     <description>Podman benchmark [$(podman.check.id)] $(podman.check.title) on $(podman.container.name)</description>
     <mitre>
@@ -204,7 +223,8 @@
   </rule>
 
   <rule id="100134" level="3">
-    <decoded_as>podman-benchmark-summary</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.benchmark.summary$</field>
     <description>Podman benchmark summary: score $(podman.score) with $(podman.findings) findings across $(podman.containers_scanned) containers</description>
     <group>podman,podman_benchmark,</group>
     <options>no_full_log</options>
@@ -227,7 +247,8 @@
   <!-- Inventory -->
 
   <rule id="100140" level="3">
-    <decoded_as>podman-inventory</decoded_as>
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^podman.inventory$</field>
     <description>Podman inventory: $(podman.counts.running) running of $(podman.counts.containers) containers</description>
     <group>podman,podman_inventory,</group>
     <options>no_full_log</options>
