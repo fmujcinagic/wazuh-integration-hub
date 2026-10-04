@@ -79,6 +79,12 @@ def metric_agg(agg_id, field, metric, label, schema="metric"):
             "params": {"field": field, "customLabel": label}}
 
 
+def top_hits_agg(agg_id, field, label, schema="metric"):
+    return {"id": agg_id, "enabled": True, "type": "top_hits", "schema": schema,
+            "params": {"field": field, "aggregate": "concat", "size": 1,
+                       "sortField": "@timestamp", "sortOrder": "desc", "customLabel": label}}
+
+
 def date_histogram():
     return {
         "id": "2", "enabled": True, "type": "date_histogram", "schema": "segment",
@@ -158,7 +164,7 @@ def main():
             count_agg(),
             terms_agg("2", "data.keycloak.user", 15, "1"),
             terms_agg("3", "data.keycloak.realm", 5, "1"),
-            metric_agg("4", "data.keycloak.ip", "max", "Last IP"),
+            top_hits_agg("4", "data.keycloak.ip", "Last IP"),
         ],
         "data.event_type:keycloak.login",
     )
@@ -168,7 +174,7 @@ def main():
         [
             count_agg(),
             terms_agg("2", "data.keycloak.ip", 15, "1"),
-            metric_agg("3", "data.keycloak.ip", "max", "Last IP"),
+            top_hits_agg("3", "data.keycloak.ip", "Last IP"),
             terms_agg("4", "data.keycloak.error", 5, "1"),
         ],
         "data.keycloak.type:LOGIN_ERROR",
