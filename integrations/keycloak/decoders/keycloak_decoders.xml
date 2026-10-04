@@ -1,0 +1,116 @@
+<!--
+  Keycloak decoders.
+
+  Two ingestion paths are supported, both end up in the same "keycloak"
+  namespace the rules rely on:
+
+  1. The built-in jboss-logging event listener: enabling the listener for a
+     realm emits user statements of the form
+         type="LOGIN", realmId="...", userId="...", error="...", ipAddress="..."
+     and admin statements of the form
+         operationType="CREATE", realmId="...", resourceType="USER"
+     inside the plain Quarkus console lines that Keycloak writes by default
+     (WARN [org.keycloak.events] ...). The agent tails that console log.
+
+  2. Canonical payloads: a collector or an SPI listener writes compact JSON
+     documents carrying an "event_type" key ("keycloak.login" and
+     "keycloak.admin") namespaced under a "keycloak" object.
+
+  The listener statements decode under the keycloak-events chain. The top
+  matches only the logger line and every field is a sibling decoder that
+  searches forward from it, so a missing or reordered field never blocks
+  the others. Siblings must carry the parent name for the engine to run
+  them all. The regexes are pcre2 because OS_Regex cannot skip a variable
+  middle. The canonical payloads decode through the JSON plugin decoder,
+  which reports itself as "json", so the canonical rules anchor on
+  decoded_as json plus event_type.
+
+  The file is installed as ruleset/decoders/0005c-keycloak_decoders.xml so
+  it is evaluated before the generic JSON decoder.
+-->
+
+<decoder name="keycloak-events">
+  <prematch>org.keycloak.events</prematch>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">type="?([^,"]+)</regex>
+  <order>keycloak.type</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">realmName="?([^,"]+)</regex>
+  <order>keycloak.realm</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">realmId="?([^,"]+)</regex>
+  <order>keycloak.realm</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">username="?([^,"]+)</regex>
+  <order>keycloak.user</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">login_hint="?([^,"]+)</regex>
+  <order>keycloak.user</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">userId="?([^,"]+)</regex>
+  <order>keycloak.user</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">clientId="?([^,"]+)</regex>
+  <order>keycloak.client</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2"> ipAddress="?([0-9a-fA-F.:]+)</regex>
+  <order>keycloak.ip</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">error="?([^,"]+)</regex>
+  <order>keycloak.error</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">operationType="?([^,"]+)</regex>
+  <order>keycloak.operation</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">resourceType="?([^,"]+)</regex>
+  <order>keycloak.resource_type</order>
+</decoder>
+
+<decoder name="keycloak-events">
+  <parent>keycloak-events</parent>
+  <regex type="pcre2">resourcePath="?([^,"]+)</regex>
+  <order>keycloak.resource</order>
+</decoder>
+
+<decoder name="keycloak-login">
+  <prematch>"event_type":"keycloak.login"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="keycloak-admin-events">
+  <prematch>"event_type":"keycloak.admin"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>

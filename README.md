@@ -1,10 +1,10 @@
-# Wazuh Podman & Network Bandwidth Monitoring - Decoders/Rules/Dashboards/Benchmark
+# Wazuh Podman, Network Bandwidth & Keycloak Monitoring - Decoders/Rules/Dashboards/Benchmark
 
-Wazuh contribution to integrations in the sense of Podman container lifecycle monitoring and the network bandwidth monitoring.
+Wazuh contribution to integrations in the sense of Podman container lifecycle monitoring, network bandwidth monitoring and Keycloak authentication monitoring.
 As of the moment of contributing/writing, Wazuh has no out-of-box (documented) integrations for these needs, eventhough they are highly applicable in today's industry. 
 
 Each integration ships its own collector, decoders, rules, dashboards and tests, and can be loaded into any Wazuh
-manager. Please refer to the details in the `network` and `podman` folders for detailed overview and integration of the decoders/rules/dashboards depending on the way you deployed the Wazuh stack.
+manager. Please refer to the details in the `network`, `podman` and `keycloak` folders for a detailed overview of the decoders/rules/dashboards and how to load them depending on the way you deployed the Wazuh stack.
 
 ## Podman container monitoring
 
@@ -34,6 +34,20 @@ Collects host network counters and the TCP sockets used by Wazuh.
 
 See `integrations/network/README.md`.
 
+## Keycloak authentication monitoring
+
+Watches identity flows through the built-in jboss-logging event listener,
+plus optional canonical JSON payloads.
+
+* Successful logins and logouts
+* Login failures with their Keycloak error reason
+* User enumeration and brute force protection
+* Rejected credentials and disabled accounts
+* Admin operations on users, roles and realms
+* Six visualizations and one dashboard
+
+See `integrations/keycloak/README.md`.
+
 
 ![Podman dashboard](screenshots/podman-dashboard.png)
 
@@ -56,10 +70,13 @@ Decoders that must run before the built-in JSON decoder are installed under
 ```
 python3 integrations/podman/tests/test_monitoring.py
 python3 integrations/network/tests/test_network.py
+python3 integrations/keycloak/tests/test_keycloak.py
 ```
 
-Both suites require a running Wazuh manager container and an enrolled agent on
-the same host.
+The podman and network suites require a running Wazuh manager container and an
+enrolled agent on the same host. The keycloak suite spawns its own disposable
+Keycloak container and points its indexer and dashboard checks at the master
+through `WAZUH_INDEXER_URL` and `WAZUH_DASHBOARD_URL`.
 
 ## Future work...
 

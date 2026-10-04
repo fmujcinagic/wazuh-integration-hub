@@ -1,0 +1,184 @@
+<!--
+  Keycloak authentication monitoring rules (IDs 102000 - 102099).
+  The payloads are namespaced under the "keycloak" object, so rules target
+  keycloak.type, keycloak.error, keycloak.user and keycloak.ip.
+
+  Two ingestion paths share this ruleset:
+
+  1. The jboss-logging listener statements decode under the keycloak-events
+     chain (and keycloak-admin for admin statements).
+  2. Canonical payloads are decoded by the JSON plugin decoder and anchor
+     on the event_type value they carry.
+-->
+
+<group name="keycloak,">
+
+  <!-- Listener statements (decoded_as keycloak-events) -->
+
+  <rule id="102000" level="3">
+    <decoded_as>keycloak-events</decoded_as>
+    <field name="keycloak.type">^LOGIN$</field>
+    <field name="keycloak.user" type="pcre2">.+</field>
+    <description>Keycloak: login for user $(keycloak.user) in realm $(keycloak.realm) from $(keycloak.ip)</description>
+    <group>keycloak,keycloak_login,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102001" level="5">
+    <decoded_as>keycloak-events</decoded_as>
+    <field name="keycloak.type">^LOGIN_ERROR$</field>
+    <description>Keycloak: login failure for $(keycloak.user) in realm $(keycloak.realm) from $(keycloak.ip) ($(keycloak.error))</description>
+    <mitre>
+      <id>T1078, T1110</id>
+    </mitre>
+    <group>keycloak,keycloak_login,keycloak_login_fail,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102002" level="7">
+    <if_sid>102001</if_sid>
+    <field name="keycloak.error" type="pcre2">^(INVALID_USER_CREDENTIALS|invalid_grant|user_disabled_in_denied|token_expired)$</field>
+    <description>Keycloak: rejected credentials for $(keycloak.user) ($(keycloak.error))</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>keycloak,keycloak_login,keycloak_credentials,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102003" level="5">
+    <if_sid>102001</if_sid>
+    <field name="keycloak.error">^user_not_found$</field>
+    <description>Keycloak: login attempt for an unknown user from $(keycloak.ip)</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>keycloak,keycloak_login,keycloak_user_enumeration,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102004" level="10">
+    <if_sid>102001</if_sid>
+    <field name="keycloak.error">^brute_force_protected$</field>
+    <description>Keycloak: brute force protection triggered for $(keycloak.user)</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>keycloak,keycloak_login,keycloak_bruteforce,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102005" level="6">
+    <decoded_as>keycloak-events</decoded_as>
+    <field name="keycloak.type">^USER_DISABLED$</field>
+    <description>Keycloak: disabled user $(keycloak.user) attempted a login</description>
+    <group>keycloak,keycloak_login,keycloak_account,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102006" level="3">
+    <decoded_as>keycloak-events</decoded_as>
+    <field name="keycloak.type">^LOGOUT$</field>
+    <description>Keycloak: user $(keycloak.user) logged out</description>
+    <group>keycloak,keycloak_logout,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102021" level="8">
+    <decoded_as>keycloak-events</decoded_as>
+    <field name="keycloak.operation" type="pcre2">.+</field>
+    <description>Keycloak: admin operation $(keycloak.operation) on $(keycloak.resource_type) at $(keycloak.resource)</description>
+    <mitre>
+      <id>T1098</id>
+    </mitre>
+    <group>keycloak,keycloak_admin,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <!-- Canonical payloads (JSON plugin decoder) -->
+
+  <rule id="102010" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^keycloak.login$</field>
+    <field name="keycloak.type">^LOGIN$</field>
+    <description>Keycloak: login for user $(keycloak.user) in realm $(keycloak.realm) from $(keycloak.ip)</description>
+    <group>keycloak,keycloak_login,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102011" level="5">
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^keycloak.login$</field>
+    <field name="keycloak.type">^LOGIN_ERROR$</field>
+    <description>Keycloak: login failure for $(keycloak.user) in realm $(keycloak.realm) from $(keycloak.ip)</description>
+    <mitre>
+      <id>T1078, T1110</id>
+    </mitre>
+    <group>keycloak,keycloak_login,keycloak_login_fail,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102012" level="7">
+    <if_sid>102011</if_sid>
+    <field name="keycloak.error" type="pcre2">^(INVALID_USER_CREDENTIALS|invalid_grant|user_disabled_in_denied|token_expired)$</field>
+    <description>Keycloak: rejected credentials for $(keycloak.user) ($(keycloak.error))</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>keycloak,keycloak_login,keycloak_credentials,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102013" level="5">
+    <if_sid>102011</if_sid>
+    <field name="keycloak.error">^user_not_found$</field>
+    <description>Keycloak: login attempt for an unknown user from $(keycloak.ip)</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>keycloak,keycloak_login,keycloak_user_enumeration,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102014" level="10">
+    <if_sid>102011</if_sid>
+    <field name="keycloak.error">^brute_force_protected$</field>
+    <description>Keycloak: brute force protection triggered for $(keycloak.user)</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>keycloak,keycloak_login,keycloak_bruteforce,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102015" level="6">
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^keycloak.login$</field>
+    <field name="keycloak.type">^USER_DISABLED$</field>
+    <description>Keycloak: disabled user $(keycloak.user) attempted a login</description>
+    <group>keycloak,keycloak_login,keycloak_account,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102016" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^keycloak.login$</field>
+    <field name="keycloak.type">^LOGOUT$</field>
+    <description>Keycloak: user $(keycloak.user) logged out</description>
+    <group>keycloak,keycloak_logout,</group>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="102020" level="8">
+    <decoded_as>json</decoded_as>
+    <field name="event_type">^keycloak.admin$</field>
+    <field name="keycloak.operation" type="pcre2">.+</field>
+    <description>Keycloak: admin operation $(keycloak.operation) on $(keycloak.resource_type) at $(keycloak.resource)</description>
+    <mitre>
+      <id>T1098</id>
+    </mitre>
+    <group>keycloak,keycloak_admin,</group>
+    <options>no_full_log</options>
+  </rule>
+
+</group>

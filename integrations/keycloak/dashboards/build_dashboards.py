@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 
 import base64
 import json
@@ -6,10 +7,10 @@ import ssl
 import sys
 import urllib.request
 
-DASHBOARD_URL = "https://localhost:8443"
-CREDENTIALS = "admin:SecretPassword"
-INDEX_PATTERN = "network-alerts"
-OUTPUT = "network_dashboards.ndjson"
+DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "https://localhost:8443")
+CREDENTIALS = os.environ.get("WAZUH_CREDENTIALS", "admin:SecretPassword")
+INDEX_PATTERN = "keycloak-alerts"
+OUTPUT = "keycloak_dashboards.ndjson"
 
 CTX = ssl.create_default_context()
 CTX.check_hostname = False
@@ -115,7 +116,7 @@ LINE_PARAMS = {
         "id": "ValueAxis-1", "name": "LeftAxis-1", "type": "value", "position": "left",
         "show": True, "style": {}, "scale": {"type": "linear", "mode": "normal"},
         "labels": {"show": True, "rotate": 0, "filter": False, "truncate": 100},
-        "title": {"text": "Value"},
+        "title": {"text": "Count"},
     }],
 }
 
@@ -140,86 +141,58 @@ def main():
     })
 
     create_visualization(
-        "network-wazuh-connections", "Network: Wazuh connections", "metric",
-        metric_params("Connections"),
-        [metric_agg("1", "data.network.connections", "max", "Connections")],
-        "data.event_type:network.wazuh",
+        "keycloak-login-trends", "Keycloak: logins over time", "line", LINE_PARAMS,
+        [count_agg(), date_histogram()],
+        "rule.groups:keycloak_login",
     )
 
     create_visualization(
-        "network-latency", "Network: manager latency", "metric",
-        metric_params("ms"),
-        [metric_agg("1", "data.network.rtt_ms", "max", "RTT ms")],
-        "data.event_type:network.latency",
+        "keycloak-failures-by-error", "Keycloak: login failures by error", "pie", PIE_PARAMS,
+        [count_agg(), terms_agg("2", "data.keycloak.error", 15)],
+        "data.event_type:keycloak.login AND data.keycloak.type:LOGIN_ERROR",
     )
 
     create_visualization(
-        "network-wazuh-traffic", "Network: Wazuh traffic", "line", LINE_PARAMS,
+        "keycloak-top-users", "Keycloak: top users", "table", TABLE_PARAMS,
         [
-            metric_agg("1", "data.network.rate_sent_bps", "avg", "Sent bps"),
-            date_histogram(),
-            metric_agg("3", "data.network.rate_received_bps", "avg", "Received bps"),
+            count_agg(),
+            terms_agg("2", "data.keycloak.user", 15, "1"),
+            terms_agg("3", "data.keycloak.realm", 5, "1"),
+            metric_agg("4", "data.keycloak.ip", "max", "Last IP"),
         ],
-        "data.event_type:network.wazuh",
+        "data.event_type:keycloak.login",
     )
 
     create_visualization(
-        "network-interface-throughput", "Network: interface throughput", "line", LINE_PARAMS,
+        "keycloak-failed-by-ip", "Keycloak: failed logins by source", "table", TABLE_PARAMS,
         [
-            metric_agg("1", "data.network.rx_rate_bps", "avg", "RX bps"),
-            date_histogram(),
-            metric_agg("3", "data.network.tx_rate_bps", "avg", "TX bps"),
-            terms_agg("4", "data.network.interface", 5, "1", "desc", "group"),
+            count_agg(),
+            terms_agg("2", "data.keycloak.ip", 15, "1"),
+            metric_agg("3", "data.keycloak.ip", "max", "Last IP"),
+            terms_agg("4", "data.keycloak.error", 5, "1"),
         ],
-        "data.event_type:network.interface",
+        "data.keycloak.type:LOGIN_ERROR",
     )
 
     create_visualization(
-        "network-top-interfaces", "Network: top interfaces", "table", TABLE_PARAMS,
-        [
-            metric_agg("1", "data.network.rx_rate_bps", "avg", "Avg RX bps"),
-            terms_agg("2", "data.network.interface", 15, "1"),
-            metric_agg("3", "data.network.tx_rate_bps", "avg", "Avg TX bps"),
-            metric_agg("4", "data.network.rx_errors", "max", "RX errors"),
-        ],
-        "data.event_type:network.interface",
+        "keycloak-success-logins", "Keycloak: successful logins", "metric", metric_params("Logins"),
+        [count_agg()],
+        "data.keycloak.type:LOGIN",
     )
 
     create_visualization(
-        "network-traffic-by-interface", "Network: traffic share by interface", "pie", PIE_PARAMS,
-        [metric_agg("1", "data.network.rx_rate_bps", "sum", "RX bps"), terms_agg("2", "data.network.interface", 15)],
-        "data.event_type:network.interface",
-    )
-
-    create_visualization(
-        "network-connections", "Network: Wazuh connections", "table", TABLE_PARAMS,
-        [
-            metric_agg("1", "data.network.rtt_ms", "max", "RTT ms"),
-            terms_agg("2", "data.network.peer", 15, "1"),
-            metric_agg("3", "data.network.bytes_sent", "max", "Bytes sent"),
-            metric_agg("4", "data.network.bytes_retrans", "max", "Bytes retrans"),
-        ],
-        "data.event_type:network.connection",
-    )
-
-    create_visualization(
-        "network-retrans", "Network: TCP retransmission rate", "line", LINE_PARAMS,
-        [
-            metric_agg("1", "data.network.retrans_rate", "avg", "Retrans/s"),
-            date_histogram(),
-        ],
-        "data.event_type:network.snmp",
+        "keycloak-bruteforce", "Keycloak: brute force findings", "table", TABLE_PARAMS,
+        [count_agg(), terms_agg("2", "data.keycloak.user", 10, "1"), terms_agg("3", "data.keycloak.ip", 5, "1")],
+        "rule.groups:keycloak_bruteforce",
     )
 
     panels = [
-        ("1", "network-wazuh-connections", 0, 0, 12, 12),
-        ("2", "network-latency", 12, 0, 12, 12),
-        ("3", "network-traffic-by-interface", 24, 0, 12, 12),
-        ("4", "network-retrans", 36, 0, 12, 12),
-        ("5", "network-wazuh-traffic", 0, 12, 24, 15),
-        ("6", "network-interface-throughput", 24, 12, 24, 15),
-        ("7", "network-top-interfaces", 0, 27, 24, 15),
-        ("8", "network-connections", 24, 27, 24, 15),
+        ("1", "keycloak-success-logins", 0, 0, 12, 12),
+        ("2", "keycloak-bruteforce", 12, 0, 12, 12),
+        ("3", "keycloak-failures-by-error", 24, 0, 12, 12),
+        ("4", "keycloak-top-users", 36, 0, 12, 12),
+        ("5", "keycloak-login-trends", 0, 12, 24, 15),
+        ("6", "keycloak-failed-by-ip", 24, 12, 24, 15),
     ]
     panels_json = json.dumps([
         {
@@ -235,17 +208,17 @@ def main():
         {"name": f"panel_{panel_id}", "type": "visualization", "id": vis_id}
         for panel_id, vis_id, *_ in panels
     ]
-    put_object("dashboard", "network-overview", {
-        "title": "Network Bandwidth Monitoring",
+    put_object("dashboard", "keycloak-overview", {
+        "title": "Keycloak Authentication Monitoring",
         "hits": 0,
-        "description": "Agent-manager bandwidth, retransmissions and latency.",
+        "description": "Logins, login failures, brute force findings and admin operations.",
         "panelsJSON": panels_json,
         "optionsJSON": json.dumps({"useMargins": True, "hidePanelTitles": False, "darkTheme": False}),
         "version": 1,
         "timeRestore": False,
         "kibanaSavedObjectMeta": {
             "searchSourceJSON": json.dumps({
-                "query": {"query": "rule.groups:network", "language": "kuery"},
+                "query": {"query": "rule.groups:keycloak", "language": "kuery"},
                 "filter": [],
             }),
         },
@@ -253,7 +226,7 @@ def main():
 
     objects = [{"type": "index-pattern", "id": INDEX_PATTERN}]
     objects += [{"type": "visualization", "id": vis_id} for _, vis_id, *_ in panels]
-    objects.append({"type": "dashboard", "id": "network-overview"})
+    objects.append({"type": "dashboard", "id": "keycloak-overview"})
     export = request("POST", "/api/saved_objects/_export",
                      {"objects": objects, "includeReferencesDeep": True}, raw=True)
     lines = [line for line in export.splitlines() if b'"exportedCount"' not in line]

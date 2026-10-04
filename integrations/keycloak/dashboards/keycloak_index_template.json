@@ -1,0 +1,25 @@
+{
+  "index_patterns": ["wazuh-alerts-*"],
+  "order": 3,
+  "mappings": {
+    "properties": {
+      "data": {
+        "properties": {
+          "keycloak": {
+            "properties": {
+              "type": { "type": "keyword" },
+              "operation": { "type": "keyword" },
+              "realm": { "type": "keyword" },
+              "user": { "type": "keyword" },
+              "client": { "type": "keyword" },
+              "ip": { "type": "ip" },
+              "error": { "type": "keyword" },
+              "resource_type": { "type": "keyword" },
+              "details": { "type": "keyword" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
